@@ -60,10 +60,16 @@ func (t *Server) AddGrade(args Args, reply *int) error {
     return nil
 }
 
-func (t *Server) studentMean(name string) float64 {
+func (t *Server) mean(tp string, name string) float64 {
     var res float64
     var n float64
-    for _, v := range t.Alumnos[name] {
+    var m map[string]float64
+    if tp == "student" {
+        m = t.Alumnos[name]
+    } else if tp == "class" {
+        m = t.Materias[name]
+    }
+    for _, v := range m {
         res += v
         n++
     }
@@ -75,7 +81,7 @@ func (t *Server) generalMean() float64 {
     var res float64
     var n float64
     for k, _ := range t.Alumnos {
-        res += t.studentMean(k)
+        res += t.mean("student", k)
         n++
     }
     res /= n
@@ -86,7 +92,7 @@ func (t *Server) StudentMean(args Args, reply *float64) error {
     if _, err := t.Alumnos[args.Nombre]; !err {
         return errors.New("El usuario " + args.Nombre + " no fue registrado con anterioridad")
     }
-    (*reply) = t.studentMean(args.Nombre)
+    (*reply) = t.mean("student", args.Nombre)
     return nil
 }
 
@@ -140,9 +146,10 @@ func readHTML(fileName string) string {
 func generalMean(res http.ResponseWriter, req *http.Request) {
     res.Header().Set("Content-Type", "text/html")
     if len((*serIns).Alumnos) == 0 {
-        fmt.Fprintln(res, readHTML("./generalMeanError.html"))
+        fmt.Fprintf(res, readHTML("./genericMsg.html"), "Error", "Error: No hay alumnos registrados")
     } else {
-        fmt.Fprintf(res, readHTML("./generalMeanError.html"), (*serIns).generalMean())
+        msg := "El promedio general de los alumnos es: " + fmt.Sprintf("%f", (*serIns).generalMean())
+        fmt.Fprintf(res, readHTML("./genericMsg.html"), "Promedio general", msg)
     }
 }
 
@@ -198,20 +205,46 @@ func getTable(data map[string]map[string]float64) string {
 
 func studentMean(res http.ResponseWriter, req *http.Request) {
     res.Header().Set("Content-Type", "text/html")
-    fmt.Fprintf(res, readHTML("./studentMean.html"))
+    fmt.Fprintf(res, readHTML("./genericMean.html"), "alumno", "alumno", "alumno", "alu", "alu")
 }
 
 func resStudentMean(res http.ResponseWriter, req *http.Request) {
-    res.Header().Set("Content-Type", "text/html")
+    if err := req.ParseForm(); err != nil {
+        fmt.Fprintf(res, "ParseForm() error %v", err)
+        return
+    }
     student := req.FormValue("alu")
-    mean := fmt.Sprintf("%f", (*serIns).studentMean(student))
+    mean := fmt.Sprintf("%f", (*serIns).mean("student", student))
     msg := "El promedio de " + student + " es: " + mean
+    if _, err := (*serIns).Alumnos[student]; !err || mean == "NaN" {
+        fmt.Fprintf(res, readHTML("./genericMsg.html"), "Error", "El estudiante " + student + " no existe")
+        return
+    }
+    res.Header().Set("Content-Type", "text/html")
     title := "Promedio de " + student
-    fmt.Println(msg)
     fmt.Fprintf(res, readHTML("./genericMsg.html"), title, msg)
 }
 
 func classMean(res http.ResponseWriter, req *http.Request) {
+    res.Header().Set("Content-Type", "text/html")
+    fmt.Fprintf(res, readHTML("./genericMean.html"), "materia", "materia", "materia", "mat", "mat")
+}
+
+func resClassMean(res http.ResponseWriter, req *http.Request) {
+    if err := req.ParseForm(); err != nil {
+        fmt.Fprintf(res, "ParseForm() error %v", err)
+        return
+    }
+    class := req.FormValue("mat")
+    mean := fmt.Sprintf("%f", (*serIns).mean("class", class))
+    msg := "El promedio de la materia " + class + " es: " + mean
+    if _, err := (*serIns).Materias[class]; !err || mean == "NaN" {
+        fmt.Fprintf(res, readHTML("./genericMsg.html"), "Error", "La materia " + class + " no existe")
+        return
+    }
+    res.Header().Set("Content-Type", "text/html")
+    title := "Promedio de " + class
+    fmt.Fprintf(res, readHTML("./genericMsg.html"), title, msg)
 }
 
 func main() {
@@ -228,7 +261,8 @@ func main() {
     http.HandleFunc("/registros", registry)
     http.HandleFunc("/promedio_alumno", studentMean)
     http.HandleFunc("/res_promedio_alumno", resStudentMean)
-    http.HandleFunc("/promedio_general", generalMean)
     http.HandleFunc("/promedio_materia", classMean)
+    http.HandleFunc("/res_promedio_materia", resClassMean)
+    http.HandleFunc("/promedio_general", generalMean)
     http.ListenAndServe(":9001", nil)
 }
