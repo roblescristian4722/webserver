@@ -197,7 +197,18 @@ func getTable(data map[string]map[string]float64) string {
 }
 
 func studentMean(res http.ResponseWriter, req *http.Request) {
+    res.Header().Set("Content-Type", "text/html")
+    fmt.Fprintf(res, readHTML("./studentMean.html"))
+}
 
+func resStudentMean(res http.ResponseWriter, req *http.Request) {
+    res.Header().Set("Content-Type", "text/html")
+    student := req.FormValue("alu")
+    mean := fmt.Sprintf("%f", (*serIns).studentMean(student))
+    msg := "El promedio de " + student + " es: " + mean
+    title := "Promedio de " + student
+    fmt.Println(msg)
+    fmt.Fprintf(res, readHTML("./genericMsg.html"), title, msg)
 }
 
 func classMean(res http.ResponseWriter, req *http.Request) {
@@ -216,6 +227,7 @@ func main() {
     http.HandleFunc("/agregar", add)
     http.HandleFunc("/registros", registry)
     http.HandleFunc("/promedio_alumno", studentMean)
+    http.HandleFunc("/res_promedio_alumno", resStudentMean)
     http.HandleFunc("/promedio_general", generalMean)
     http.HandleFunc("/promedio_materia", classMean)
     http.ListenAndServe(":9001", nil)
