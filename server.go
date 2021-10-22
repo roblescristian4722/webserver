@@ -80,7 +80,7 @@ func (t *Server) mean(tp string, name string) float64 {
 func (t *Server) generalMean() float64 {
     var res float64
     var n float64
-    for k, _ := range t.Alumnos {
+    for k := range t.Alumnos {
         res += t.mean("student", k)
         n++
     }
@@ -264,5 +264,5 @@ func main() {
     http.HandleFunc("/promedio_materia", classMean)
     http.HandleFunc("/res_promedio_materia", resClassMean)
     http.HandleFunc("/promedio_general", generalMean)
-    http.ListenAndServe(":9001", nil)
+    http.ListenAndServe(":9000", nil)
 }

@@ -8,27 +8,44 @@
             table, th, td {
                 border: 1px solid black;
                 border-collapse: collapse;
+                padding: 5px 5px 1px 5px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            table {
+                margin-bottom: 2px;
+            }
+            h2 {
+                margin-bottom: 10px;
+            }
+            .container {
+                text-align: center;
+                align-items: center;
             }
         </style>
     </head>
     <body>
-        <table>
-            <tr>Alumnos</tr>
-            <tr>
-                <th>Alumno</th>
-                <th>Materia</th>
-                <th>Calificación</th>
-            </tr>
-            %s
-        </table>
-        <table>
-            <tr>Materias</tr>
-            <tr>
-                <th>Materia</th>
-                <th>Alumno</th>
-                <th>Calificación</th>
-            </tr>
-            %s
-        </table>
+        <div class=container>
+            <h2>Alumnos</h2>
+            <table>
+                <tr>
+                    <th>Alumno</th>
+                    <th>Materia</th>
+                    <th>Calificación</th>
+                </tr>
+                %s
+            </table>
+        </div>
+        <div class=container>
+            <h2>Materias</h2>
+            <table>
+                <tr>
+                    <th>Materia</th>
+                    <th>Alumno</th>
+                    <th>Calificación</th>
+                </tr>
+                %s
+            </table>
+        </div>
     </body>
 </html>
