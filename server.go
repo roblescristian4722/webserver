@@ -167,8 +167,33 @@ func registry(res http.ResponseWriter, req *http.Request) {
                     req.FormValue("mat"),
                     cal)
     case "GET":
-
+        res.Header().Set("Content-Type", "text/html")
+        fmt.Fprintf(res,
+                    readHTML("./regTable.html"),
+                    getTable((*&serIns.Alumnos)),
+                    getTable((*&serIns.Materias)))
     }
+}
+
+func getTable(data map[string]map[string]float64) string {
+    var html string
+    for k, v := range data {
+        rowspan := false
+        for ki, vi := range v {
+            if len(v) > 1 && !rowspan {
+                html += "<tr>" +
+                "<td rowspan=\"" + strconv.FormatInt(int64(len(v)), 10) + "\">" + k + "</td>"
+                rowspan = true
+            } else if !rowspan {
+                html += "<tr>" +
+                "<td>" + k + "</td>"
+                rowspan = true
+            }
+            html += "<td>" + ki + "</td>" +
+            "<td>" + fmt.Sprintf("%f", vi) + "</td>" + "</tr>"
+        }
+    }
+    return html
 }
 
 func studentMean(res http.ResponseWriter, req *http.Request) {
@@ -193,5 +218,5 @@ func main() {
     http.HandleFunc("/promedio_alumno", studentMean)
     http.HandleFunc("/promedio_general", generalMean)
     http.HandleFunc("/promedio_materia", classMean)
-    http.ListenAndServe(":9000", nil)
+    http.ListenAndServe(":9001", nil)
 }
